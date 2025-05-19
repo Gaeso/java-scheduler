@@ -2,11 +2,13 @@ package com.example.javascheduler.repository;
 
 import com.example.javascheduler.dto.ScheduleResponseDto;
 import com.example.javascheduler.entity.Schedule;
+import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.sql.DataSource;
 import java.time.LocalDate;
@@ -59,6 +61,12 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
         {
             return jdbcTemplate.query("SELECT author, content, updated_at FROM schedule WHERE Date(updated_at) = ? AND author = ? ORDER BY updated_at DESC", scheduleRowMapper(), date, author);
         }
+    }
+
+    @Override
+    public Schedule findScheduleById(Long id) {
+        List<Schedule> query = jdbcTemplate.query("SELECT author, content, updated_at FROM schedule WHERE id = ?", scheduleRowMapper(), id);
+        return query.stream().findAny().orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
     private RowMapper<Schedule> scheduleRowMapper() {

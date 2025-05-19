@@ -1,5 +1,6 @@
 package com.example.javascheduler.service;
 
+import com.example.javascheduler.dto.ScheduleListDto;
 import com.example.javascheduler.dto.ScheduleRequestDto;
 import com.example.javascheduler.dto.ScheduleResponseDto;
 import com.example.javascheduler.entity.Schedule;
@@ -28,18 +29,23 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
-    public List<ScheduleResponseDto> findAllByCondition(LocalDate date, String author) {
+    public List<ScheduleListDto> findAllByCondition(LocalDate date, String author) {
         if(date == null && author == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
 
         List<Schedule> schedules = scheduleRepository.findAllByCondition(date,author);
-        List<ScheduleResponseDto> dtos = new ArrayList<>();
+        List<ScheduleListDto> dtos = new ArrayList<>();
 
         for(Schedule schedule : schedules) {
-            dtos.add(new ScheduleResponseDto(schedule));
+            dtos.add(new ScheduleListDto(schedule));
         }
 
         return dtos;
+    }
+
+    @Override
+    public ScheduleListDto findScheduleById(Long id) {
+        return new ScheduleListDto(scheduleRepository.findScheduleById(id));
     }
 }

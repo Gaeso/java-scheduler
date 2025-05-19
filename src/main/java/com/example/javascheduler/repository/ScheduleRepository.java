@@ -11,4 +11,5 @@ import java.util.List;
 public interface ScheduleRepository {
     ScheduleResponseDto saveSchedule(Schedule schedule);
     List<Schedule> findAllByCondition(LocalDate date, String author);
+    Schedule findScheduleById(Long id);
 }

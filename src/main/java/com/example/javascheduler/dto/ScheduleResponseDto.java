@@ -6,6 +6,7 @@ import lombok.Getter;
 
 import java.time.LocalDateTime;
 
+// 전체적인 데이터를 반환하는 DTO
 @Getter
 @AllArgsConstructor
 public class ScheduleResponseDto {

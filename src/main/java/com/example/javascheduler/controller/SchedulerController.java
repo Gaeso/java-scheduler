@@ -1,5 +1,6 @@
 package com.example.javascheduler.controller;
 
+import com.example.javascheduler.dto.ScheduleListDto;
 import com.example.javascheduler.dto.ScheduleRequestDto;
 import com.example.javascheduler.dto.ScheduleResponseDto;
 import com.example.javascheduler.service.ScheduleService;
@@ -30,10 +31,17 @@ public class SchedulerController {
 
     // 일정 조회 API (수정일 & 작성자 기준)
     @GetMapping
-    public ResponseEntity<List<ScheduleResponseDto>> readAllByCondition(
+    public ResponseEntity<List<ScheduleListDto>> readAllByCondition(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
             @RequestParam(required = false) String author
     ) {
         return new ResponseEntity<>(scheduleService.findAllByCondition(date, author), HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ScheduleListDto> readScheduleById(
+            @PathVariable Long id
+    ) {
+        return new ResponseEntity<>(scheduleService.findScheduleById(id), HttpStatus.OK);
     }
 }
