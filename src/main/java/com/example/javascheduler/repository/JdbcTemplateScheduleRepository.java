@@ -3,17 +3,20 @@ package com.example.javascheduler.repository;
 import com.example.javascheduler.dto.ScheduleResponseDto;
 import com.example.javascheduler.entity.Schedule;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Repository
-public class JdbcTemplateScheduleRepository implements ScheduleRepository{
+public class JdbcTemplateScheduleRepository implements ScheduleRepository {
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -39,5 +42,30 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository{
         Number key = jdbcInsert.executeAndReturnKey(new MapSqlParameterSource(parameters));
 
         return new ScheduleResponseDto(key.longValue(), schedule.getAuthor(), schedule.getContent(), schedule.getPassword(), now, now);
+    }
+
+    @Override
+    public List<Schedule> findAllByCondition(LocalDate date, String author) {
+
+        if(date == null)
+        {
+            return jdbcTemplate.query("SELECT author, content, updated_at FROM schedule WHERE author = ? ORDER BY updated_at DESC", scheduleRowMapper(), author);
+        }
+        else if(author == null)
+        {
+            return jdbcTemplate.query("SELECT author, content, updated_at FROM schedule WHERE Date(updated_at) = ? ORDER BY updated_at DESC", scheduleRowMapper(), date);
+        }
+        else
+        {
+            return jdbcTemplate.query("SELECT author, content, updated_at FROM schedule WHERE Date(updated_at) = ? AND author = ? ORDER BY updated_at DESC", scheduleRowMapper(), date, author);
+        }
+    }
+
+    private RowMapper<Schedule> scheduleRowMapper() {
+        return (rs, rowNum) -> new Schedule(
+                rs.getString("author"),
+                rs.getString("content"),
+                rs.getTimestamp("updated_at").toLocalDateTime()
+        );
     }
 }

@@ -21,4 +21,10 @@ public class Schedule {
         this.content = content;
         this.password = password;
     }
+
+    public Schedule(String author, String content, LocalDateTime updated_at) {
+        this.author = author;
+        this.content = content;
+        this.updated_at = updated_at;
+    }
 }
