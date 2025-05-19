@@ -29,7 +29,6 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository{
         LocalDateTime now = LocalDateTime.now();
 
         Map<String, Object> parameters = new HashMap<>();
-        parameters.put("title", schedule.getTitle());
         parameters.put("content", schedule.getContent());
         parameters.put("author", schedule.getAuthor());
         parameters.put("password", schedule.getPassword());
@@ -39,6 +38,6 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository{
         // 저장 후 생성된 key값 Number 타입으로 반환하는 메서드
         Number key = jdbcInsert.executeAndReturnKey(new MapSqlParameterSource(parameters));
 
-        return new ScheduleResponseDto(key.longValue(), schedule.getTitle(), schedule.getAuthor(), schedule.getContent(), schedule.getPassword(), now, now);
+        return new ScheduleResponseDto(key.longValue(), schedule.getAuthor(), schedule.getContent(), schedule.getPassword(), now, now);
     }
 }

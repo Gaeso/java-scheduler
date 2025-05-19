@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ScheduleResponseDto {
     private Long id;
-    private String title;
     private String author;
     private String content;
     private String password;
