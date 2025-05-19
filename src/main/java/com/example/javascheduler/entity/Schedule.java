@@ -17,4 +17,10 @@ public class Schedule {
     private LocalDateTime created_at;
     private LocalDateTime updated_at;
 
+    public Schedule(String title, String author, String content, String password) {
+        this.title = title;
+        this.author = author;
+        this.content = content;
+        this.password = password;
+    }
 }
