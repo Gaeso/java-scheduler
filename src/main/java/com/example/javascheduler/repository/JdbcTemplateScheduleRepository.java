@@ -1,6 +1,5 @@
 package com.example.javascheduler.repository;
 
-import com.example.javascheduler.dto.ScheduleResponseDto;
 import com.example.javascheduler.entity.Schedule;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -28,32 +27,33 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
     }
 
     @Override
-    public ScheduleResponseDto saveSchedule(Schedule schedule) {
+    public Schedule saveSchedule(Schedule schedule) {
         SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(jdbcTemplate);
         jdbcInsert.withTableName("schedule").usingGeneratedKeyColumns("id");
 
-        LocalDateTime now = LocalDateTime.now();
 
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("content", schedule.getContent());
-        parameters.put("author", schedule.getAuthor());
+        parameters.put("userId", schedule.getUserId());
         parameters.put("password", schedule.getPassword());
-        parameters.put("created_at", now);
-        parameters.put("updated_at", now);
+        parameters.put("created_at", schedule.getCreated_at());
+        parameters.put("updated_at", schedule.getUpdated_at());
 
         // 저장 후 생성된 key값 Number 타입으로 반환하는 메서드
         Number key = jdbcInsert.executeAndReturnKey(new MapSqlParameterSource(parameters));
 
-        return new ScheduleResponseDto(key.longValue(), schedule.getAuthor(), schedule.getContent(), now, now);
+        schedule.setId(key.longValue());
+
+        return schedule;
     }
 
     @Override
-    public List<Schedule> findAllByCondition(LocalDate date, String author) {
+    public List<Schedule> findAllByCondition(LocalDate date, Long userId) {
         StringBuilder sql = new StringBuilder("SELECT * FROM schedule");
         List<Object> params = new ArrayList<>();
 
         // WHERE 절 동적 구성
-        if (date != null || author != null) {
+        if (date != null || userId != null) {
             sql.append(" WHERE");
 
             List<String> conditions = new ArrayList<>();
@@ -63,9 +63,9 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
                 params.add(date);
             }
 
-            if (author != null) {
-                conditions.add(" author = ?");
-                params.add(author);
+            if (userId != null) {
+                conditions.add(" user_id = ?");
+                params.add(userId);
             }
 
             sql.append(String.join(" AND", conditions));
@@ -73,7 +73,7 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
 
         sql.append(" ORDER BY updated_at DESC");
 
-        return jdbcTemplate.query(sql.toString(), scheduleRowMapper(), params.toArray());
+        return jdbcTemplate.query(sql.toString(), scheduleRowMapper2(), params.toArray());
     }
 
     @Override
@@ -83,8 +83,8 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
     }
 
     @Override
-    public int updateScheduleById(Long id, String author, String content, LocalDateTime now) {
-        return jdbcTemplate.update("update schedule set author = ?, content = ? , updated_at = ? WHERE id = ?", author, content, now, id);
+    public int updateScheduleById(Long id, String content, LocalDateTime now) {
+        return jdbcTemplate.update("update schedule set content = ? , updated_at = ? WHERE id = ?", content, now, id);
     }
 
     @Override
@@ -95,9 +95,20 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
 
     private RowMapper<Schedule> scheduleRowMapper() {
         return (rs, rowNum) -> new Schedule(
-                rs.getString("author"),
+                rs.getLong("user_id"),
                 rs.getString("content"),
                 rs.getString("password"),
+                rs.getTimestamp("updated_at").toLocalDateTime()
+        );
+    }
+
+    private RowMapper<Schedule> scheduleRowMapper2() {
+        return (rs, rowNum) -> new Schedule(
+                rs.getLong("id"),
+                rs.getLong("user_id"),
+                rs.getString("content"),
+                rs.getString("password"),
+                rs.getTimestamp("created_at").toLocalDateTime(),
                 rs.getTimestamp("updated_at").toLocalDateTime()
         );
     }

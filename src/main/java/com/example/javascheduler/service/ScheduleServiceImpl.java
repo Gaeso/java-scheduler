@@ -4,7 +4,9 @@ import com.example.javascheduler.dto.ScheduleListDto;
 import com.example.javascheduler.dto.ScheduleRequestDto;
 import com.example.javascheduler.dto.ScheduleResponseDto;
 import com.example.javascheduler.entity.Schedule;
+import com.example.javascheduler.entity.User;
 import com.example.javascheduler.repository.ScheduleRepository;
+import com.example.javascheduler.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -18,25 +20,31 @@ import java.util.List;
 public class ScheduleServiceImpl implements ScheduleService {
 
     private final ScheduleRepository scheduleRepository;
+    private final UserRepository userRepository;
 
-    public ScheduleServiceImpl(ScheduleRepository scheduleRepository) {
+    public ScheduleServiceImpl(ScheduleRepository scheduleRepository, UserRepository userRepository) {
         this.scheduleRepository = scheduleRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
     public ScheduleResponseDto saveSchedule(ScheduleRequestDto dto) {
-        Schedule schedule = new Schedule(dto.getAuthor(), dto.getContent(), dto.getPassword());
-        return scheduleRepository.saveSchedule(schedule);
+        User user = userRepository.findUserById(dto.getUserId());
+        LocalDateTime now = LocalDateTime.now();
+
+        Schedule savedSchedule = new Schedule(dto.getUserId(), dto.getContent(), dto.getPassword(), now, now);
+        savedSchedule = scheduleRepository.saveSchedule(savedSchedule);
+        return new ScheduleResponseDto(savedSchedule, user);
     }
 
     @Override
-    public List<ScheduleListDto> findAllByCondition(LocalDate date, String author) {
-
-        List<Schedule> schedules = scheduleRepository.findAllByCondition(date,author);
-        List<ScheduleListDto> dtos = new ArrayList<>();
+    public List<ScheduleResponseDto> findAllByCondition(LocalDate date, Long userId) {
+        List<Schedule> schedules = scheduleRepository.findAllByCondition(date,userId);
+        List<ScheduleResponseDto> dtos = new ArrayList<>();
 
         for(Schedule schedule : schedules) {
-            dtos.add(new ScheduleListDto(schedule));
+            User user = userRepository.findUserById(schedule.getUserId());
+            dtos.add(new ScheduleResponseDto(schedule, user));
         }
 
         return dtos;
@@ -50,7 +58,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Override
     public ScheduleListDto updateScheduleById(Long id, ScheduleRequestDto dto) {
 
-        if(dto.getAuthor() == null || dto.getContent() == null) {
+        if(dto.getContent() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
 
@@ -63,7 +71,7 @@ public class ScheduleServiceImpl implements ScheduleService {
             throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
         }
 
-        int updatedRow = scheduleRepository.updateScheduleById(id, dto.getAuthor(), dto.getContent(), now);
+        int updatedRow = scheduleRepository.updateScheduleById(id, dto.getContent(), now);
         if(updatedRow == 0) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }

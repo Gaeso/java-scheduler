@@ -31,11 +31,11 @@ public class SchedulerController {
 
     // 일정 조회 API (수정일 & 작성자 기준)
     @GetMapping
-    public ResponseEntity<List<ScheduleListDto>> readAllByCondition(
+    public ResponseEntity<List<ScheduleResponseDto>> readAllByCondition(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
-            @RequestParam(required = false) String author
+            @RequestParam(required = false) Long userId
     ) {
-        return new ResponseEntity<>(scheduleService.findAllByCondition(date, author), HttpStatus.OK);
+        return new ResponseEntity<>(scheduleService.findAllByCondition(date, userId), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
@@ -52,7 +52,7 @@ public class SchedulerController {
     ) {
         return new ResponseEntity<>(scheduleService.updateScheduleById(id, dto), HttpStatus.OK);
     }
-
+    
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSchedule(
             @PathVariable Long id,

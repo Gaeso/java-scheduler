@@ -11,7 +11,7 @@ import java.util.List;
 @Service
 public interface ScheduleService {
     ScheduleResponseDto saveSchedule(ScheduleRequestDto dto);
-    List<ScheduleListDto> findAllByCondition(LocalDate date, String author);
+    List<ScheduleResponseDto> findAllByCondition(LocalDate date, Long userId);
     ScheduleListDto findScheduleById(Long id);
     ScheduleListDto updateScheduleById(Long id, ScheduleRequestDto dto);
     void deleteScheduleById(Long id, ScheduleRequestDto dto);

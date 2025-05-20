@@ -10,12 +10,12 @@ import java.time.LocalDateTime;
 @Getter
 @AllArgsConstructor
 public class ScheduleListDto {
-    private final String author;
+    private final Long userId;
     private final String content;
     private final LocalDateTime updated_at;
 
     public ScheduleListDto(Schedule schedule) {
-        this.author = schedule.getAuthor();
+        this.userId = schedule.getUserId();
         this.content = schedule.getContent();
         this.updated_at = schedule.getUpdated_at();
     }
