@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,9 +31,6 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     public List<ScheduleListDto> findAllByCondition(LocalDate date, String author) {
-        if(date == null && author == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-        }
 
         List<Schedule> schedules = scheduleRepository.findAllByCondition(date,author);
         List<ScheduleListDto> dtos = new ArrayList<>();
@@ -47,5 +45,32 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Override
     public ScheduleListDto findScheduleById(Long id) {
         return new ScheduleListDto(scheduleRepository.findScheduleById(id));
+    }
+
+    @Override
+    public ScheduleListDto updateScheduleById(Long id, ScheduleRequestDto dto) {
+
+        if(dto.getAuthor() == null || dto.getContent() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        Schedule schedule = scheduleRepository.findScheduleById(id);
+
+        if(!schedule.getPassword().equals(dto.getPassword()))
+        {
+            throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
+        }
+
+        int updatedRow = scheduleRepository.updateScheduleById(id, dto.getAuthor(), dto.getContent(), now);
+        if(updatedRow == 0) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+
+        schedule = scheduleRepository.findScheduleById(id);
+        schedule.setUpdated_at(now);
+
+        return new ScheduleListDto(schedule);
     }
 }

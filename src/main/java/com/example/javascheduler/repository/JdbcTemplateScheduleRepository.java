@@ -13,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 import javax.sql.DataSource;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,36 +44,55 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
         // 저장 후 생성된 key값 Number 타입으로 반환하는 메서드
         Number key = jdbcInsert.executeAndReturnKey(new MapSqlParameterSource(parameters));
 
-        return new ScheduleResponseDto(key.longValue(), schedule.getAuthor(), schedule.getContent(), schedule.getPassword(), now, now);
+        return new ScheduleResponseDto(key.longValue(), schedule.getAuthor(), schedule.getContent(), now, now);
     }
 
     @Override
     public List<Schedule> findAllByCondition(LocalDate date, String author) {
+        StringBuilder sql = new StringBuilder("SELECT * FROM schedule");
+        List<Object> params = new ArrayList<>();
 
-        if(date == null)
-        {
-            return jdbcTemplate.query("SELECT author, content, updated_at FROM schedule WHERE author = ? ORDER BY updated_at DESC", scheduleRowMapper(), author);
+        // WHERE 절 동적 구성
+        if (date != null || author != null) {
+            sql.append(" WHERE");
+
+            List<String> conditions = new ArrayList<>();
+
+            if (date != null) {
+                conditions.add(" DATE(updated_at) = ?");
+                params.add(date);
+            }
+
+            if (author != null) {
+                conditions.add(" author = ?");
+                params.add(author);
+            }
+
+            sql.append(String.join(" AND", conditions));
         }
-        else if(author == null)
-        {
-            return jdbcTemplate.query("SELECT author, content, updated_at FROM schedule WHERE Date(updated_at) = ? ORDER BY updated_at DESC", scheduleRowMapper(), date);
-        }
-        else
-        {
-            return jdbcTemplate.query("SELECT author, content, updated_at FROM schedule WHERE Date(updated_at) = ? AND author = ? ORDER BY updated_at DESC", scheduleRowMapper(), date, author);
-        }
+
+        sql.append(" ORDER BY updated_at DESC");
+
+        return jdbcTemplate.query(sql.toString(), scheduleRowMapper(), params.toArray());
     }
 
     @Override
     public Schedule findScheduleById(Long id) {
-        List<Schedule> query = jdbcTemplate.query("SELECT author, content, updated_at FROM schedule WHERE id = ?", scheduleRowMapper(), id);
+        List<Schedule> query = jdbcTemplate.query("SELECT * FROM schedule WHERE id = ?", scheduleRowMapper(), id);
         return query.stream().findAny().orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
+
+    @Override
+    public int updateScheduleById(Long id, String author, String content, LocalDateTime now) {
+        return jdbcTemplate.update("update schedule set author = ?, content = ? , updated_at = ? WHERE id = ?", author, content, now, id);
+    }
+
 
     private RowMapper<Schedule> scheduleRowMapper() {
         return (rs, rowNum) -> new Schedule(
                 rs.getString("author"),
                 rs.getString("content"),
+                rs.getString("password"),
                 rs.getTimestamp("updated_at").toLocalDateTime()
         );
     }
