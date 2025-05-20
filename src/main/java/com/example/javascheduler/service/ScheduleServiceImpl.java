@@ -73,4 +73,20 @@ public class ScheduleServiceImpl implements ScheduleService {
 
         return new ScheduleListDto(schedule);
     }
+
+    @Override
+    public void deleteScheduleById(Long id, ScheduleRequestDto dto) {
+
+        Schedule schedule = scheduleRepository.findScheduleById(id);
+        if(!schedule.getPassword().equals(dto.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
+        }
+
+        int deletedRow = scheduleRepository.deleteScheduleById(id);
+        if(deletedRow == 0) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+
+
+    }
 }

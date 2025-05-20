@@ -14,4 +14,5 @@ public interface ScheduleRepository {
     List<Schedule> findAllByCondition(LocalDate date, String author);
     Schedule findScheduleById(Long id);
     int updateScheduleById(Long id, String author, String content, LocalDateTime now);
+    int deleteScheduleById(Long id);
 }

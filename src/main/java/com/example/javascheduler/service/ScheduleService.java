@@ -14,4 +14,5 @@ public interface ScheduleService {
     List<ScheduleListDto> findAllByCondition(LocalDate date, String author);
     ScheduleListDto findScheduleById(Long id);
     ScheduleListDto updateScheduleById(Long id, ScheduleRequestDto dto);
+    void deleteScheduleById(Long id, ScheduleRequestDto dto);
 }
