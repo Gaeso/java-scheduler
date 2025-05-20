@@ -73,7 +73,7 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
 
         sql.append(" ORDER BY updated_at DESC");
 
-        return jdbcTemplate.query(sql.toString(), scheduleRowMapper2(), params.toArray());
+        return jdbcTemplate.query(sql.toString(), scheduleRowMapper(), params.toArray());
     }
 
     @Override
@@ -92,17 +92,7 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
         return jdbcTemplate.update("delete from schedule where id = ?", id);
     }
 
-
     private RowMapper<Schedule> scheduleRowMapper() {
-        return (rs, rowNum) -> new Schedule(
-                rs.getLong("user_id"),
-                rs.getString("content"),
-                rs.getString("password"),
-                rs.getTimestamp("updated_at").toLocalDateTime()
-        );
-    }
-
-    private RowMapper<Schedule> scheduleRowMapper2() {
         return (rs, rowNum) -> new Schedule(
                 rs.getLong("id"),
                 rs.getLong("user_id"),

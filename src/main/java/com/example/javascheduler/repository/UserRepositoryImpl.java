@@ -25,6 +25,11 @@ public class UserRepositoryImpl implements UserRepository{
         return query.stream().findAny().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
+    @Override
+    public int updateName(User user) {
+        return jdbcTemplate.update("update user set name = ? , updated_at = now() where id = ?", user.getName(), user.getId());
+    }
+
     private RowMapper<User> userRowMapper() {
         return (rs, rowNum) -> new User(
                 rs.getLong("id"),

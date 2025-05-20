@@ -1,8 +1,8 @@
 package com.example.javascheduler.service;
 
-import com.example.javascheduler.dto.ScheduleListDto;
 import com.example.javascheduler.dto.ScheduleRequestDto;
 import com.example.javascheduler.dto.ScheduleResponseDto;
+import com.example.javascheduler.dto.UpdateResponseDto;
 import com.example.javascheduler.entity.Schedule;
 import com.example.javascheduler.entity.User;
 import com.example.javascheduler.repository.ScheduleRepository;
@@ -42,6 +42,11 @@ public class ScheduleServiceImpl implements ScheduleService {
         List<Schedule> schedules = scheduleRepository.findAllByCondition(date,userId);
         List<ScheduleResponseDto> dtos = new ArrayList<>();
 
+        if(userId != null)
+        {
+            userRepository.findUserById(userId);
+        }
+
         for(Schedule schedule : schedules) {
             User user = userRepository.findUserById(schedule.getUserId());
             dtos.add(new ScheduleResponseDto(schedule, user));
@@ -51,12 +56,13 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
-    public ScheduleListDto findScheduleById(Long id) {
-        return new ScheduleListDto(scheduleRepository.findScheduleById(id));
+    public ScheduleResponseDto findScheduleById(Long id) {
+        final User user = userRepository.findUserById(scheduleRepository.findScheduleById(id).getUserId());
+        return new ScheduleResponseDto(scheduleRepository.findScheduleById(id), user);
     }
 
     @Override
-    public ScheduleListDto updateScheduleById(Long id, ScheduleRequestDto dto) {
+    public ScheduleResponseDto updateScheduleById(Long id, UpdateResponseDto dto) {
 
         if(dto.getContent() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
@@ -79,7 +85,14 @@ public class ScheduleServiceImpl implements ScheduleService {
         schedule = scheduleRepository.findScheduleById(id);
         schedule.setUpdated_at(now);
 
-        return new ScheduleListDto(schedule);
+        User user = userRepository.findUserById(schedule.getUserId());
+        user.setName(dto.getName());
+        int updatedUserRow = userRepository.updateName(user);
+        if(updatedUserRow == 0) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+
+        return new ScheduleResponseDto(schedule, user);
     }
 
     @Override

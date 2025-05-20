@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UserRepository {
     User findUserById(Long userId);
+    int updateName(User user);
 }

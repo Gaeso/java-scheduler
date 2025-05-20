@@ -1,8 +1,8 @@
 package com.example.javascheduler.service;
 
-import com.example.javascheduler.dto.ScheduleListDto;
 import com.example.javascheduler.dto.ScheduleRequestDto;
 import com.example.javascheduler.dto.ScheduleResponseDto;
+import com.example.javascheduler.dto.UpdateResponseDto;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -12,7 +12,7 @@ import java.util.List;
 public interface ScheduleService {
     ScheduleResponseDto saveSchedule(ScheduleRequestDto dto);
     List<ScheduleResponseDto> findAllByCondition(LocalDate date, Long userId);
-    ScheduleListDto findScheduleById(Long id);
-    ScheduleListDto updateScheduleById(Long id, ScheduleRequestDto dto);
+    ScheduleResponseDto findScheduleById(Long id);
+    ScheduleResponseDto updateScheduleById(Long id, UpdateResponseDto dto);
     void deleteScheduleById(Long id, ScheduleRequestDto dto);
 }

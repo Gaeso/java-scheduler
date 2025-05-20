@@ -1,8 +1,8 @@
 package com.example.javascheduler.controller;
 
-import com.example.javascheduler.dto.ScheduleListDto;
 import com.example.javascheduler.dto.ScheduleRequestDto;
 import com.example.javascheduler.dto.ScheduleResponseDto;
+import com.example.javascheduler.dto.UpdateResponseDto;
 import com.example.javascheduler.service.ScheduleService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -39,16 +39,16 @@ public class SchedulerController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ScheduleListDto> readScheduleById(
+    public ResponseEntity<ScheduleResponseDto> readScheduleById(
             @PathVariable Long id
     ) {
         return new ResponseEntity<>(scheduleService.findScheduleById(id), HttpStatus.OK);
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<ScheduleListDto> updateSchedule(
+    public ResponseEntity<ScheduleResponseDto> updateSchedule(
             @PathVariable Long id,
-            @RequestBody ScheduleRequestDto dto
+            @RequestBody UpdateResponseDto dto
     ) {
         return new ResponseEntity<>(scheduleService.updateScheduleById(id, dto), HttpStatus.OK);
     }
