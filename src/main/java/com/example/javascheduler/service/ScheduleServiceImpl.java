@@ -7,6 +7,9 @@ import com.example.javascheduler.entity.Schedule;
 import com.example.javascheduler.entity.User;
 import com.example.javascheduler.repository.ScheduleRepository;
 import com.example.javascheduler.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -39,20 +42,50 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     public List<ScheduleResponseDto> findAllByCondition(LocalDate date, Long userId) {
-        List<Schedule> schedules = scheduleRepository.findAllByCondition(date,userId);
+        List<Schedule> schedules = scheduleRepository.findAllByCondition(date, userId);
         List<ScheduleResponseDto> dtos = new ArrayList<>();
 
-        if(userId != null)
-        {
+        if (userId != null) {
             userRepository.findUserById(userId);
         }
 
-        for(Schedule schedule : schedules) {
+        for (Schedule schedule : schedules) {
             User user = userRepository.findUserById(schedule.getUserId());
             dtos.add(new ScheduleResponseDto(schedule, user));
         }
 
         return dtos;
+    }
+
+    /*
+        page (페이지 번호): 현재 페이지 위치 (보통 0 또는 1부터 시작)
+        size (페이지 크기): 한 페이지에 표시할 아이템 수 (ex: 10개, 20개)
+        limit: 한 페이지에 표시할 아이템 수 (= size)
+        offset: 건너뛸 아이템 수 (시작 위치)
+     */
+    @Override
+    public Page<ScheduleResponseDto> findSchedulePage(LocalDate date, Long userId, Integer page, Integer size) {
+        long totalCount = scheduleRepository.countAll(date, userId);
+        // 시작 페이지는 1
+        int offset = (page - 1) * size;
+        List<Schedule> schedules = scheduleRepository.findPageByCondition(date, userId, offset, size);
+
+        List<ScheduleResponseDto> dtos = new ArrayList<>();
+
+        if (userId != null) {
+            userRepository.findUserById(userId);
+        }
+
+        for (Schedule schedule : schedules) {
+            User user = userRepository.findUserById(schedule.getUserId());
+            dtos.add(new ScheduleResponseDto(schedule, user));
+        }
+
+        return new PageImpl<>(
+                dtos,
+                PageRequest.of(page - 1, size),
+                totalCount
+        );
     }
 
     @Override
@@ -64,7 +97,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Override
     public ScheduleResponseDto updateScheduleById(Long id, UpdateResponseDto dto) {
 
-        if(dto.getContent() == null) {
+        if (dto.getContent() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
 
@@ -72,13 +105,12 @@ public class ScheduleServiceImpl implements ScheduleService {
 
         Schedule schedule = scheduleRepository.findScheduleById(id);
 
-        if(!schedule.getPassword().equals(dto.getPassword()))
-        {
+        if (!schedule.getPassword().equals(dto.getPassword())) {
             throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
         }
 
         int updatedRow = scheduleRepository.updateScheduleById(id, dto.getContent(), now);
-        if(updatedRow == 0) {
+        if (updatedRow == 0) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
 
@@ -88,7 +120,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         User user = userRepository.findUserById(schedule.getUserId());
         user.setName(dto.getName());
         int updatedUserRow = userRepository.updateName(user);
-        if(updatedUserRow == 0) {
+        if (updatedUserRow == 0) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
 
@@ -99,15 +131,13 @@ public class ScheduleServiceImpl implements ScheduleService {
     public void deleteScheduleById(Long id, ScheduleRequestDto dto) {
 
         Schedule schedule = scheduleRepository.findScheduleById(id);
-        if(!schedule.getPassword().equals(dto.getPassword())) {
+        if (!schedule.getPassword().equals(dto.getPassword())) {
             throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
         }
 
         int deletedRow = scheduleRepository.deleteScheduleById(id);
-        if(deletedRow == 0) {
+        if (deletedRow == 0) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
-
-
     }
 }

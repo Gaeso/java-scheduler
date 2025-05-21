@@ -4,6 +4,7 @@ import com.example.javascheduler.dto.ScheduleRequestDto;
 import com.example.javascheduler.dto.ScheduleResponseDto;
 import com.example.javascheduler.dto.UpdateResponseDto;
 import com.example.javascheduler.service.ScheduleService;
+import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +37,14 @@ public class SchedulerController {
             @RequestParam(required = false) Long userId
     ) {
         return new ResponseEntity<>(scheduleService.findAllByCondition(date, userId), HttpStatus.OK);
+    }
+
+    @GetMapping("/page")
+    public ResponseEntity<Page<ScheduleResponseDto>> readScheduleWithPage(@RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
+                                                                     @RequestParam(required = false) Long userId,
+                                                                     @RequestParam(required = false, defaultValue = "1") Integer page,
+                                                                     @RequestParam(required = false, defaultValue = "5") Integer size) {
+        return new ResponseEntity<>(scheduleService.findSchedulePage(date, userId, page, size), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")

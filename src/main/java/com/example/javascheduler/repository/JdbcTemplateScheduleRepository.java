@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.server.ResponseStatusException;
@@ -21,9 +22,11 @@ import java.util.Map;
 public class JdbcTemplateScheduleRepository implements ScheduleRepository {
 
     private final JdbcTemplate jdbcTemplate;
+    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    public JdbcTemplateScheduleRepository(DataSource dataSource) {
+    public JdbcTemplateScheduleRepository(DataSource dataSource, NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
 
     @Override
@@ -50,7 +53,7 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
     @Override
     public List<Schedule> findAllByCondition(LocalDate date, Long userId) {
         StringBuilder sql = new StringBuilder("SELECT * FROM schedule");
-        List<Object> params = new ArrayList<>();
+        MapSqlParameterSource params = new MapSqlParameterSource();
 
         // WHERE 절 동적 구성
         if (date != null || userId != null) {
@@ -59,21 +62,42 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
             List<String> conditions = new ArrayList<>();
 
             if (date != null) {
-                conditions.add(" DATE(updated_at) = ?");
-                params.add(date);
+                conditions.add(" DATE(updated_at) = :date");
+                params.addValue("date", date);
             }
 
             if (userId != null) {
-                conditions.add(" user_id = ?");
-                params.add(userId);
+                conditions.add(" user_id = :userId");
+                params.addValue("userId", userId);
             }
 
             sql.append(String.join(" AND", conditions));
         }
-
         sql.append(" ORDER BY updated_at DESC");
 
-        return jdbcTemplate.query(sql.toString(), scheduleRowMapper(), params.toArray());
+        return namedParameterJdbcTemplate.query(sql.toString(), params, scheduleRowMapper());
+    }
+
+    @Override
+    public List<Schedule> findPageByCondition(LocalDate date, Long userId, int offset, int limit) {
+
+        String sql = """
+            SELECT s.id, s.content, s.user_id, s.created_at, s.updated_at, u.email
+            FROM schedule s
+            JOIN user u ON s.user_id = u.id
+            WHERE (:date IS NULL OR DATE(s.updated_at) = :date)
+            AND (:userId IS NULL OR s.user_id = :userId)
+            ORDER BY s.updated_at DESC
+            LIMIT :limit OFFSET :offset
+            """;
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("date", date)
+                .addValue("userId", userId)
+                .addValue("limit", limit)
+                .addValue("offset", offset);
+
+        return namedParameterJdbcTemplate.query(sql, params, pageRowMapper());
     }
 
     @Override
@@ -92,12 +116,29 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
         return jdbcTemplate.update("delete from schedule where id = ?", id);
     }
 
+    @Override
+    public long countAll(LocalDate date, Long userId) {
+        List<Schedule> schedules = findAllByCondition(date, userId);
+        return schedules.size();
+    }
+
     private RowMapper<Schedule> scheduleRowMapper() {
         return (rs, rowNum) -> new Schedule(
                 rs.getLong("id"),
                 rs.getLong("user_id"),
                 rs.getString("content"),
                 rs.getString("password"),
+                rs.getTimestamp("created_at").toLocalDateTime(),
+                rs.getTimestamp("updated_at").toLocalDateTime()
+        );
+    }
+
+    private RowMapper<Schedule> pageRowMapper() {
+        return (rs, rowNum) -> new Schedule(
+                rs.getLong("id"),
+                rs.getLong("user_id"),
+                rs.getString("content"),
+                null,
                 rs.getTimestamp("created_at").toLocalDateTime(),
                 rs.getTimestamp("updated_at").toLocalDateTime()
         );
