@@ -1,14 +1,13 @@
 package com.example.javascheduler.repository;
 
 import com.example.javascheduler.entity.Schedule;
-import org.springframework.http.HttpStatus;
+import com.example.javascheduler.exception.ScheduleNotFoundException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
-import org.springframework.web.server.ResponseStatusException;
 
 import javax.sql.DataSource;
 import java.time.LocalDate;
@@ -107,7 +106,7 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
     @Override
     public Schedule findScheduleById(Long id) {
         List<Schedule> query = jdbcTemplate.query("SELECT * FROM schedule WHERE id = ?", scheduleRowMapper(), id);
-        return query.stream().findAny().orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        return query.stream().findAny().orElseThrow(()-> new ScheduleNotFoundException(id));
     }
 
     // 일정 수정

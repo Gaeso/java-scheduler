@@ -1,11 +1,10 @@
 package com.example.javascheduler.repository;
 
 import com.example.javascheduler.entity.User;
-import org.springframework.http.HttpStatus;
+import com.example.javascheduler.exception.UserNotFoundException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -22,7 +21,7 @@ public class UserRepositoryImpl implements UserRepository{
     public User findUserById(Long userId) {
         List<User> query = jdbcTemplate.query("select * from user where id = ?", userRowMapper(), userId);
         
-        return query.stream().findAny().orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND));
+        return query.stream().findAny().orElseThrow(()->new UserNotFoundException(userId));
     }
 
     @Override

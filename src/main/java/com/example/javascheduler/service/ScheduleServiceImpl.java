@@ -5,6 +5,8 @@ import com.example.javascheduler.dto.ScheduleResponseDto;
 import com.example.javascheduler.dto.UpdateResponseDto;
 import com.example.javascheduler.entity.Schedule;
 import com.example.javascheduler.entity.User;
+import com.example.javascheduler.exception.PasswordMismatchException;
+import com.example.javascheduler.exception.ScheduleNotFoundException;
 import com.example.javascheduler.repository.ScheduleRepository;
 import com.example.javascheduler.repository.UserRepository;
 import org.springframework.data.domain.Page;
@@ -105,7 +107,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     public ScheduleResponseDto updateScheduleById(Long id, UpdateResponseDto dto) {
 
         if (dto.getContent() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            throw new ScheduleNotFoundException(id);
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -114,15 +116,11 @@ public class ScheduleServiceImpl implements ScheduleService {
 
         // 비밀번호 불일치 406 에러
         if (!schedule.getPassword().equals(dto.getPassword())) {
-            throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
+            throw new PasswordMismatchException();
         }
 
         // 일정 내용 업데이트
-        int updatedRow = scheduleRepository.updateScheduleById(id, dto.getContent(), now);
-        if (updatedRow == 0) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        }
-
+        scheduleRepository.updateScheduleById(id, dto.getContent(), now);
 
         schedule = scheduleRepository.findScheduleById(id);
         schedule.setUpdated_at(now);
@@ -130,10 +128,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         // 사용자 이름 업데이트
         User user = userRepository.findUserById(schedule.getUserId());
         user.setName(dto.getName());
-        int updatedUserRow = userRepository.updateName(user);
-        if (updatedUserRow == 0) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        }
+        userRepository.updateName(user);
 
         return new ScheduleResponseDto(schedule, user);
     }
