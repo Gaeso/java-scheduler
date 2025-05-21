@@ -1,4 +1,4 @@
-# 📅 Schedule Management API
+# 📅 일정 관리 API
 
 Spring Boot 기반의 일정 관리 REST API 서비스입니다. 
 사용자별 일정 생성, 조회, 수정, 삭제 기능을 제공합니다.
@@ -30,7 +30,7 @@ Spring Boot 기반의 일정 관리 REST API 서비스입니다.
 ### 저장소 복제:
 ```
 bash
-git clone https://github.com/your-repo/schedule-management-api.git
+git clone https://github.com/Gaeso/java-scheduler.git
 ```
 ### 애플리케이션 실행:
 ```
