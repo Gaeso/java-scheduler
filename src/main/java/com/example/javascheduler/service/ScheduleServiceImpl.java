@@ -30,6 +30,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         this.userRepository = userRepository;
     }
 
+    // 일정 저장 및 생성
     @Override
     public ScheduleResponseDto saveSchedule(ScheduleRequestDto dto) {
         User user = userRepository.findUserById(dto.getUserId());
@@ -40,6 +41,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         return new ScheduleResponseDto(savedSchedule, user);
     }
 
+    // 조건별 일정 목록 조회
     @Override
     public List<ScheduleResponseDto> findAllByCondition(LocalDate date, Long userId) {
         List<Schedule> schedules = scheduleRepository.findAllByCondition(date, userId);
@@ -58,6 +60,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     /*
+        페이징 처리된 일정 조회
         page (페이지 번호): 현재 페이지 위치 (보통 0 또는 1부터 시작)
         size (페이지 크기): 한 페이지에 표시할 아이템 수 (ex: 10개, 20개)
         limit: 한 페이지에 표시할 아이템 수 (= size)
@@ -88,12 +91,14 @@ public class ScheduleServiceImpl implements ScheduleService {
         );
     }
 
+    // 단일 일정 조회
     @Override
     public ScheduleResponseDto findScheduleById(Long id) {
         final User user = userRepository.findUserById(scheduleRepository.findScheduleById(id).getUserId());
         return new ScheduleResponseDto(scheduleRepository.findScheduleById(id), user);
     }
 
+    // 일정 수정
     @Override
     public ScheduleResponseDto updateScheduleById(Long id, UpdateResponseDto dto) {
 
@@ -105,18 +110,22 @@ public class ScheduleServiceImpl implements ScheduleService {
 
         Schedule schedule = scheduleRepository.findScheduleById(id);
 
+        // 비밀번호 불일치 406 에러
         if (!schedule.getPassword().equals(dto.getPassword())) {
             throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
         }
 
+        // 일정 내용 업데이트
         int updatedRow = scheduleRepository.updateScheduleById(id, dto.getContent(), now);
         if (updatedRow == 0) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
 
+
         schedule = scheduleRepository.findScheduleById(id);
         schedule.setUpdated_at(now);
 
+        // 사용자 이름 업데이트
         User user = userRepository.findUserById(schedule.getUserId());
         user.setName(dto.getName());
         int updatedUserRow = userRepository.updateName(user);
@@ -127,6 +136,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         return new ScheduleResponseDto(schedule, user);
     }
 
+    // 일정 삭제
     @Override
     public void deleteScheduleById(Long id, ScheduleRequestDto dto) {
 

@@ -29,10 +29,11 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
 
+    // 일정 저장
     @Override
     public Schedule saveSchedule(Schedule schedule) {
         SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(jdbcTemplate);
-        jdbcInsert.withTableName("schedule").usingGeneratedKeyColumns("id");
+        jdbcInsert.withTableName("schedule").usingGeneratedKeyColumns("id"); // 자동 생성 ID 사용
 
 
         Map<String, Object> parameters = new HashMap<>();
@@ -50,6 +51,7 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
         return schedule;
     }
 
+    // 조건별 일정 조회
     @Override
     public List<Schedule> findAllByCondition(LocalDate date, Long userId) {
         StringBuilder sql = new StringBuilder("SELECT * FROM schedule");
@@ -73,11 +75,12 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
 
             sql.append(String.join(" AND", conditions));
         }
-        sql.append(" ORDER BY updated_at DESC");
+        sql.append(" ORDER BY updated_at DESC"); // 최신순으로 정렬
 
         return namedParameterJdbcTemplate.query(sql.toString(), params, scheduleRowMapper());
     }
 
+    // 페이징 조회
     @Override
     public List<Schedule> findPageByCondition(LocalDate date, Long userId, int offset, int limit) {
 
@@ -100,28 +103,33 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
         return namedParameterJdbcTemplate.query(sql, params, pageRowMapper());
     }
 
+    // 단일 일정 조회
     @Override
     public Schedule findScheduleById(Long id) {
         List<Schedule> query = jdbcTemplate.query("SELECT * FROM schedule WHERE id = ?", scheduleRowMapper(), id);
         return query.stream().findAny().orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
+    // 일정 수정
     @Override
     public int updateScheduleById(Long id, String content, LocalDateTime now) {
         return jdbcTemplate.update("update schedule set content = ? , updated_at = ? WHERE id = ?", content, now, id);
     }
 
+    // 일정 삭제
     @Override
     public int deleteScheduleById(Long id) {
         return jdbcTemplate.update("delete from schedule where id = ?", id);
     }
 
+    // 총 일정 수 카운트
     @Override
     public long countAll(LocalDate date, Long userId) {
         List<Schedule> schedules = findAllByCondition(date, userId);
         return schedules.size();
     }
 
+    // 기본 RowMapper(비밀번호 포함)
     private RowMapper<Schedule> scheduleRowMapper() {
         return (rs, rowNum) -> new Schedule(
                 rs.getLong("id"),
@@ -133,6 +141,7 @@ public class JdbcTemplateScheduleRepository implements ScheduleRepository {
         );
     }
 
+    // 페이징용 RowMapper(비밀번호 X)
     private RowMapper<Schedule> pageRowMapper() {
         return (rs, rowNum) -> new Schedule(
                 rs.getLong("id"),
