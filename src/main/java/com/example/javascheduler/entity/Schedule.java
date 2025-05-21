@@ -26,11 +26,4 @@ public class Schedule {
         this.created_at = created_at;
         this.updated_at = updated_at;
     }
-
-    public Schedule(Long userId, String content, String password, LocalDateTime updated_at) {
-        this.userId = userId;
-        this.content = content;
-        this.password = password;
-        this.updated_at = updated_at;
-    }
 }
