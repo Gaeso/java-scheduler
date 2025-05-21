@@ -1,9 +1,11 @@
 package com.example.javascheduler.controller;
 
+import com.example.javascheduler.dto.DeleteRequestDto;
 import com.example.javascheduler.dto.ScheduleRequestDto;
 import com.example.javascheduler.dto.ScheduleResponseDto;
-import com.example.javascheduler.dto.UpdateResponseDto;
+import com.example.javascheduler.dto.UpdateRequestDto;
 import com.example.javascheduler.service.ScheduleService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -25,7 +27,7 @@ public class SchedulerController {
     // 일정 생성 (POST)
     @PostMapping
     public ResponseEntity<ScheduleResponseDto> createSchedule(
-            @RequestBody ScheduleRequestDto dto
+            @RequestBody @Valid ScheduleRequestDto dto
     ) {
         return new ResponseEntity<>(scheduleService.saveSchedule(dto), HttpStatus.CREATED);
     }
@@ -61,17 +63,16 @@ public class SchedulerController {
     @PatchMapping("/{id}")
     public ResponseEntity<ScheduleResponseDto> updateSchedule(
             @PathVariable Long id,
-            @RequestBody UpdateResponseDto dto
+            @RequestBody @Valid UpdateRequestDto dto
     ) {
         return new ResponseEntity<>(scheduleService.updateScheduleById(id, dto), HttpStatus.OK);
     }
-
 
     // 일정 삭제 (DELETE)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSchedule(
             @PathVariable Long id,
-            @RequestBody ScheduleRequestDto dto
+            @RequestBody @Valid DeleteRequestDto dto
     ) {
         scheduleService.deleteScheduleById(id, dto);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);

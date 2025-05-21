@@ -2,8 +2,12 @@ package com.example.javascheduler.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -39,5 +43,25 @@ public class GlobalExceptionHandler {
                 ex.getMessage()
         );
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    // Valid
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(
+            MethodArgumentNotValidException ex) {
+
+        List<String> errors = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.toList());
+
+        ErrorResponse response = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "VALIDATION_FAILED",
+                "입력값 검증 실패",
+                errors);
+
+        return ResponseEntity.badRequest().body(response);
     }
 }

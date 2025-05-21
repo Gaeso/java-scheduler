@@ -1,8 +1,9 @@
 package com.example.javascheduler.service;
 
+import com.example.javascheduler.dto.DeleteRequestDto;
 import com.example.javascheduler.dto.ScheduleRequestDto;
 import com.example.javascheduler.dto.ScheduleResponseDto;
-import com.example.javascheduler.dto.UpdateResponseDto;
+import com.example.javascheduler.dto.UpdateRequestDto;
 import com.example.javascheduler.entity.Schedule;
 import com.example.javascheduler.entity.User;
 import com.example.javascheduler.exception.PasswordMismatchException;
@@ -12,10 +13,8 @@ import com.example.javascheduler.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -104,7 +103,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     // 일정 수정
     @Override
     @Transactional
-    public ScheduleResponseDto updateScheduleById(Long id, UpdateResponseDto dto) {
+    public ScheduleResponseDto updateScheduleById(Long id, UpdateRequestDto dto) {
 
         if (dto.getContent() == null) {
             throw new ScheduleNotFoundException(id);
@@ -136,16 +135,16 @@ public class ScheduleServiceImpl implements ScheduleService {
     // 일정 삭제
     @Override
     @Transactional
-    public void deleteScheduleById(Long id, ScheduleRequestDto dto) {
+    public void deleteScheduleById(Long id, DeleteRequestDto dto) {
 
         Schedule schedule = scheduleRepository.findScheduleById(id);
         if (!schedule.getPassword().equals(dto.getPassword())) {
-            throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
+            throw new PasswordMismatchException();
         }
 
         int deletedRow = scheduleRepository.deleteScheduleById(id);
         if (deletedRow == 0) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            throw new ScheduleNotFoundException(id);
         }
     }
 }
