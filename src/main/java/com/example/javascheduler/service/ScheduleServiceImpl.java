@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
@@ -100,6 +101,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     // 일정 수정
     @Override
+    @Transactional
     public ScheduleResponseDto updateScheduleById(Long id, UpdateResponseDto dto) {
 
         if (dto.getContent() == null) {
@@ -138,6 +140,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     // 일정 삭제
     @Override
+    @Transactional
     public void deleteScheduleById(Long id, ScheduleRequestDto dto) {
 
         Schedule schedule = scheduleRepository.findScheduleById(id);
